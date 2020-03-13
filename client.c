@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
+#include <netdb.h> 
 
 void error(const char *msg) { perror(msg); exit(0); } // Error function used for reporting issues
 
@@ -15,8 +15,8 @@ int main(int argc, char *argv[])
 	struct sockaddr_in serverAddress;
 	struct hostent* serverHostInfo;
 	char buffer[256];
-
-	if (argc < 4) { fprintf(stderr,"USAGE: %s plaintext key port\n", argv[0]); exit(0); } // Check usage & args
+    
+	if (argc < 3) { fprintf(stderr,"USAGE: %s hostname port\n", argv[0]); exit(0); } // Check usage & args
 
 	// Set up the server address struct
 	memset((char*)&serverAddress, '\0', sizeof(serverAddress)); // Clear out the address struct
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 	// Set up the socket
 	socketFD = socket(AF_INET, SOCK_STREAM, 0); // Create the socket
 	if (socketFD < 0) error("CLIENT: ERROR opening socket");
-
+	
 	// Connect to server
 	if (connect(socketFD, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) // Connect socket to address
 		error("CLIENT: ERROR connecting");
