@@ -24,7 +24,7 @@ void error(const char *msg) { perror(msg); exit(1); } // Error function used for
 char* encrypt(char * cipher, char* key, int length)
 {
         int i;
-        for(i = 0; i < length; i++)
+        for(i = 0; i < length-1; i++)
         {
                 int cipher_index = (int) cipher[i];
                 int key_index = (int) key[i];
@@ -114,48 +114,65 @@ int main(int argc, char *argv[])
                                 memset(buffer, '\0', 256);
                                 charsRead = recv(establishedConnectionFD, buffer, 255, 0); // Read the client's message from the socket
                                 if (charsRead < 0) error("ERROR reading from socket");
-                                printf("SERVER: I received this from the client: \"%s\"\n", buffer);
 
-                                // Send a Success message back to the client
-                        	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
-                        	if (charsRead < 0) error("ERROR writing to socket");
+                                /* verification check */
+                                if(strncmp(buffer, "encryption", 10) == 0)
+                                {
+                                        // Send a Success message back to the client
+                                	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+                                	if (charsRead < 0) error("ERROR writing to socket");
 
-                                //get length of message
-                                int length = atoi(&buffer[7]);
+                                        //get length of message
+                                        int length = atoi(&buffer[10]);
 
-                                // Create cipher variable
-                                char cipher[length];
-                                memset(cipher, '\0', length);
+                                        // Create cipher variable
+                                        char cipher[length-1];
+                                        memset(cipher, '\0', length-1);
 
-                                // Recieve cipher
-                                charsRead = recv(establishedConnectionFD, cipher, length, 0); // Read the client's message from the socket
-                                if (charsRead < 0) error("ERROR reading from socket");
+                                        // Recieve cipher
+                                        charsRead = recv(establishedConnectionFD, cipher, length, 0); // Read the client's message from the socket
+                                        if (charsRead < 0) error("ERROR reading from socket");
 
-                                // Send a Success message back to the client
-                        	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
-                        	if (charsRead < 0) error("ERROR writing to socket");
+                                        // Send a Success message back to the client
+                                	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+                                	if (charsRead < 0) error("ERROR writing to socket");
 
-                                // Create key variable
-                                char key[length];
-                                memset(key, '\0', length);
+                                        // Create key variable
+                                        char key[length];
+                                        memset(key, '\0', length);
 
-                                // Recieve key
-                                charsRead = recv(establishedConnectionFD, key, length, 0); // Read the client's message from the socket
-                                if (charsRead < 0) error("ERROR reading from socket");
+                                        // Recieve key
+                                        charsRead = recv(establishedConnectionFD, key, length, 0); // Read the client's message from the socket
+                                        if (charsRead < 0) error("ERROR reading from socket");
 
-                                // Send a Success message back to the client
-                        	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
-                        	if (charsRead < 0) error("ERROR writing to socket");
+                                        // Send a Success message back to the client
+                                	charsRead = send(establishedConnectionFD, "I am the server, and I got your message", 39, 0); // Send success back
+                                	if (charsRead < 0) error("ERROR writing to socket");
 
-                                /********** ENCRYPT **********/
-                                encrypt(cipher, key, length);
+                                        /********** ENCRYPT **********/
+                                        encrypt(cipher, key, length);
 
-                                // Send a encrypted cipher back to the client
-                        	charsRead = send(establishedConnectionFD, cipher, length, 0); // Send cipher back
-                        	if (charsRead < 0) error("ERROR writing to socket");
+                                        // Send a encrypted cipher back to the client
+                                	charsRead = send(establishedConnectionFD, cipher, length, 0); // Send cipher back
+                                	if (charsRead < 0) error("ERROR writing to socket");
 
-                                close(establishedConnectionFD); // Close the existing socket which is connected to the client
-                                exit(0);                        //exit child
+                                        close(establishedConnectionFD); // Close the existing socket which is connected to the client
+                                        exit(0);                        //exit child
+                                }
+                                //Else if verification fails
+                                else
+                                {
+                                        //print error
+                                        perror("ERROR: trying to connect to otp_enc_d with otp_dec");
+                                        // Send a message back to client, informing them they have used the wrong server
+                                	charsRead = send(establishedConnectionFD, "WRONG_SERVER", 12, 0); // Send success back
+                                	if (charsRead < 0) error("ERROR writing to socket");
+
+                                        close(establishedConnectionFD); // Close the existing socket which is connected to the client
+                                        exit(1);                        //exit child
+                                }
+
+
                                 break;
                 }
         }
